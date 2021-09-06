@@ -80,4 +80,10 @@ done
 
 XCFRAMEWORK="out/libpjproject.xcframework"
 rm -rf $XCFRAMEWORK
-xcodebuild -create-xcframework -library $OUT_SIM_ARM64/libpjproject.a -library $OUT_DEV_ARM64/libpjproject.a -library $OUT_MAC_ARM64/libpjproject.a -headers $OUT_HEADERS -output $XCFRAMEWORK
+xcodebuild -create-xcframework \
+-library $OUT_SIM_ARM64/libpjproject.a -headers $OUT_HEADERS \
+-library $OUT_DEV_ARM64/libpjproject.a -headers $OUT_HEADERS \
+-library $OUT_MAC_ARM64/libpjproject.a -headers $OUT_HEADERS \
+-output $XCFRAMEWORK
+
+
