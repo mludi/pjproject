@@ -27,6 +27,7 @@ EOF
 #
 # build for simulator arm64 & create lib
 #
+find . -not -path "./pjsip-apps/*" -not -path "./out/*" -name "*.a" -exec rm {} \;
 IPHONESDK="/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.5.sdk" DEVPATH="/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer" ARCH="-arch arm64" MIN_IOS="-mios-simulator-version-min=14.5" ./configure-iphone
 make dep && make clean
 CFLAGS="-Wno-macro-redefined -Wno-unused-variable -Wno-unused-function -Wno-deprecated-declarations -Wno-unused-private-field" make
@@ -42,6 +43,7 @@ libtool -static -o $OUT_SIM_ARM64/libpjproject.a `find . -not -path "./pjsip-app
 #
 # build for device arm64 & create lib
 #
+find . -not -path "./pjsip-apps/*" -not -path "./out/*" -name "*.a" -exec rm {} \;
 IPHONESDK="/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk" DEVPATH="/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer" ARCH="-arch arm64" MIN_IOS="-miphoneos-version-min=14.5" ./configure-iphone
 make dep && make clean
 CFLAGS="-Wno-macro-redefined -Wno-unused-variable -Wno-unused-function -Wno-deprecated-declarations -Wno-unused-private-field -fembed-bitcode" make
@@ -49,6 +51,45 @@ CFLAGS="-Wno-macro-redefined -Wno-unused-variable -Wno-unused-function -Wno-depr
 OUT_DEV_ARM64="out/dev_arm64"
 mkdir -p $OUT_DEV_ARM64
 libtool -static -o $OUT_DEV_ARM64/libpjproject.a `find . -not -path "./pjsip-apps/*" -not -path "./out/*" -name "*.a"`
+
+
+#
+# build for Mac arm64 & create lib
+#
+find . -not -path "./pjsip-apps/*" -not -path "./out/*" -name "*.a" -exec rm {} \;
+sed -i '' '1d' pjlib/include/pj/config_site.h
+./configure
+make dep && make clean
+CFLAGS="-Wno-macro-redefined -Wno-unused-variable -Wno-unused-function -Wno-deprecated-declarations -Wno-unused-private-field -fembed-bitcode" make
+
+OUT_MAC_ARM64="out/mac_arm64"
+mkdir -p $OUT_MAC_ARM64
+libtool -static -o $OUT_MAC_ARM64/libpjproject.a `find . -not -path "./pjsip-apps/*" -not -path "./out/*" -name "*.a"`
+
+
+#
+# build for Mac x86_64 & create lib
+#
+cat << EOF > user.mak
+export CFLAGS += -Wno-unused-label -Werror --target=x86_64-apple-darwin20.6.0
+export LDFLAGS += -framework Network -framework Security --target=x86_64-apple-darwin20.6.0
+EOF
+find . -not -path "./pjsip-apps/*" -not -path "./out/*" -name "*.a" -exec rm {} \;
+./configure --host=x86_64-apple-darwin20.6.0
+make dep && make clean
+CFLAGS="-Wno-macro-redefined -Wno-unused-variable -Wno-unused-function -Wno-deprecated-declarations -Wno-unused-private-field -fembed-bitcode" make
+
+OUT_MAC_X86_64="out/mac_x86_64"
+mkdir -p $OUT_MAC_X86_64
+libtool -static -o $OUT_MAC_X86_64/libpjproject.a `find . -not -path "./pjsip-apps/*" -not -path "./out/*" -name "*.a"`
+
+
+#
+# create fat lib for the mac
+#
+OUT_MAC="out/mac"
+mkdir -p $OUT_MAC
+lipo -create $OUT_MAC_ARM64/libpjproject.a $OUT_MAC_X86_64/libpjproject.a -output $OUT_MAC/libpjproject.a
 
 
 
@@ -63,4 +104,14 @@ for path in $LIBS; do
 done
 
 XCFRAMEWORK="out/libpjproject.xcframework"
-xcodebuild -create-xcframework -library $OUT_SIM_ARM64/libpjproject.a -library $OUT_DEV_ARM64/libpjproject.a -headers $OUT_HEADERS -output $XCFRAMEWORK
+rm -rf $XCFRAMEWORK
+xcodebuild -create-xcframework \
+-library $OUT_SIM_ARM64/libpjproject.a \
+-library $OUT_DEV_ARM64/libpjproject.a \
+-library $OUT_MAC/libpjproject.a \
+-output $XCFRAMEWORK
+
+mkdir -p $XCFRAMEWORK/Headers
+cp -a $OUT_HEADERS/* $XCFRAMEWORK/Headers
+
+/usr/libexec/PlistBuddy -c 'add:HeadersPath string Headers' $XCFRAMEWORK/Info.plist
