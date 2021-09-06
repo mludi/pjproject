@@ -27,6 +27,7 @@ EOF
 #
 # build for simulator arm64 & create lib
 #
+find . -not -path "./pjsip-apps/*" -not -path "./out/*" -name "*.a" -exec rm {} \;
 IPHONESDK="/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.5.sdk" DEVPATH="/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer" ARCH="-arch arm64" MIN_IOS="-mios-simulator-version-min=14.5" ./configure-iphone
 make dep && make clean
 CFLAGS="-Wno-macro-redefined -Wno-unused-variable -Wno-unused-function -Wno-deprecated-declarations -Wno-unused-private-field" make
@@ -42,6 +43,7 @@ libtool -static -o $OUT_SIM_ARM64/libpjproject.a `find . -not -path "./pjsip-app
 #
 # build for device arm64 & create lib
 #
+find . -not -path "./pjsip-apps/*" -not -path "./out/*" -name "*.a" -exec rm {} \;
 IPHONESDK="/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk" DEVPATH="/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer" ARCH="-arch arm64" MIN_IOS="-miphoneos-version-min=14.5" ./configure-iphone
 make dep && make clean
 CFLAGS="-Wno-macro-redefined -Wno-unused-variable -Wno-unused-function -Wno-deprecated-declarations -Wno-unused-private-field -fembed-bitcode" make
@@ -49,6 +51,20 @@ CFLAGS="-Wno-macro-redefined -Wno-unused-variable -Wno-unused-function -Wno-depr
 OUT_DEV_ARM64="out/dev_arm64"
 mkdir -p $OUT_DEV_ARM64
 libtool -static -o $OUT_DEV_ARM64/libpjproject.a `find . -not -path "./pjsip-apps/*" -not -path "./out/*" -name "*.a"`
+
+
+#
+# build for Mac arm64 & create lib
+#
+find . -not -path "./pjsip-apps/*" -not -path "./out/*" -name "*.a" -exec rm {} \;
+sed -i '' '1d' pjlib/include/pj/config_site.h
+./configure
+make dep && make clean
+CFLAGS="-Wno-macro-redefined -Wno-unused-variable -Wno-unused-function -Wno-deprecated-declarations -Wno-unused-private-field -fembed-bitcode" make
+
+OUT_MAC_ARM64="out/mac_arm64"
+mkdir -p $OUT_MAC_ARM64
+libtool -static -o $OUT_MAC_ARM64/libpjproject.a `find . -not -path "./pjsip-apps/*" -not -path "./out/*" -name "*.a"`
 
 
 
@@ -63,4 +79,5 @@ for path in $LIBS; do
 done
 
 XCFRAMEWORK="out/libpjproject.xcframework"
-xcodebuild -create-xcframework -library $OUT_SIM_ARM64/libpjproject.a -library $OUT_DEV_ARM64/libpjproject.a -headers $OUT_HEADERS -output $XCFRAMEWORK
+rm -rf $XCFRAMEWORK
+xcodebuild -create-xcframework -library $OUT_SIM_ARM64/libpjproject.a -library $OUT_DEV_ARM64/libpjproject.a -library $OUT_MAC_ARM64/libpjproject.a -headers $OUT_HEADERS -output $XCFRAMEWORK
