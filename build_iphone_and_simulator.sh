@@ -13,6 +13,7 @@ fi
 cat << EOF > pjlib/include/pj/config_site.h
 #define PJ_CONFIG_IPHONE 1
 #define PJ_HAS_SSL_SOCK 1
+#undef PJ_SSL_SOCK_IMP
 #define PJ_SSL_SOCK_IMP PJ_SSL_SOCK_IMP_APPLE
 #include <pj/config_site_sample.h>
 EOF
@@ -28,7 +29,7 @@ EOF
 # build for simulator arm64 & create lib
 #
 find . -not -path "./pjsip-apps/*" -not -path "./out/*" -name "*.a" -exec rm {} \;
-IPHONESDK="/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.5.sdk" DEVPATH="/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer" ARCH="-arch arm64" MIN_IOS="-mios-simulator-version-min=14.5" ./configure-iphone
+IPHONESDK="/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk" DEVPATH="/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer" ARCH="-arch arm64" MIN_IOS="-mios-simulator-version-min=13" ./configure-iphone
 make dep && make clean
 CFLAGS="-Wno-macro-redefined -Wno-unused-variable -Wno-unused-function -Wno-deprecated-declarations -Wno-unused-private-field" make
 
@@ -44,7 +45,7 @@ libtool -static -o $OUT_SIM_ARM64/libpjproject.a `find . -not -path "./pjsip-app
 # build for device arm64 & create lib
 #
 find . -not -path "./pjsip-apps/*" -not -path "./out/*" -name "*.a" -exec rm {} \;
-IPHONESDK="/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk" DEVPATH="/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer" ARCH="-arch arm64" MIN_IOS="-miphoneos-version-min=14.5" ./configure-iphone
+IPHONESDK="/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk" DEVPATH="/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer" ARCH="-arch arm64" MIN_IOS="-miphoneos-version-min=13" ./configure-iphone
 make dep && make clean
 CFLAGS="-Wno-macro-redefined -Wno-unused-variable -Wno-unused-function -Wno-deprecated-declarations -Wno-unused-private-field -fembed-bitcode" make
 
@@ -71,8 +72,8 @@ libtool -static -o $OUT_MAC_ARM64/libpjproject.a `find . -not -path "./pjsip-app
 # build for Mac x86_64 & create lib
 #
 cat << EOF > user.mak
-export CFLAGS += -Wno-unused-label -Werror --target=x86_64-apple-darwin20.6.0
-export LDFLAGS += -framework Network -framework Security --target=x86_64-apple-darwin20.6.0
+export CFLAGS += -Wno-unused-label -Werror --target=x86_64-apple-darwin
+export LDFLAGS += -framework Network -framework Security --target=x86_64-apple-darwin
 EOF
 find . -not -path "./pjsip-apps/*" -not -path "./out/*" -name "*.a" -exec rm {} \;
 ./configure --host=x86_64-apple-darwin20.6.0
