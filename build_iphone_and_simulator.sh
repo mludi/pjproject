@@ -4,6 +4,9 @@
 #
 # ask user if she wants to overwrite files
 #
+
+COMMAND_LINE_TOOLS_PATH="$(xcode-select -p)"
+
 read -p "This will overwrite site_config.h and user.mak. Continue?" -n 1 -r
 if [[ ! $REPLY =~ ^[Yy]$ ]]
 then
@@ -29,7 +32,7 @@ EOF
 # build for simulator arm64 & create lib
 #
 find . -not -path "./pjsip-apps/*" -not -path "./out/*" -name "*.a" -exec rm {} \;
-IPHONESDK="/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk" DEVPATH="/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer" ARCH="-arch arm64" MIN_IOS="-mios-simulator-version-min=13" ./configure-iphone
+IPHONESDK="$COMMAND_LINE_TOOLS_PATH/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk" DEVPATH="$COMMAND_LINE_TOOLS_PATH/Platforms/iPhoneSimulator.platform/Developer" ARCH="-arch arm64" MIN_IOS="-mios-simulator-version-min=13" ./configure-iphone
 make dep && make clean
 CFLAGS="-Wno-macro-redefined -Wno-unused-variable -Wno-unused-function -Wno-deprecated-declarations -Wno-unused-private-field" make
 
@@ -45,7 +48,7 @@ libtool -static -o $OUT_SIM_ARM64/libpjproject.a `find . -not -path "./pjsip-app
 # build for device arm64 & create lib
 #
 find . -not -path "./pjsip-apps/*" -not -path "./out/*" -name "*.a" -exec rm {} \;
-IPHONESDK="/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk" DEVPATH="/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer" ARCH="-arch arm64" MIN_IOS="-miphoneos-version-min=13" ./configure-iphone
+IPHONESDK="$COMMAND_LINE_TOOLS_PATH/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk" DEVPATH="$COMMAND_LINE_TOOLS_PATH/Platforms/iPhoneOS.platform/Developer" ARCH="-arch arm64" MIN_IOS="-miphoneos-version-min=13" ./configure-iphone
 make dep && make clean
 CFLAGS="-Wno-macro-redefined -Wno-unused-variable -Wno-unused-function -Wno-deprecated-declarations -Wno-unused-private-field -fembed-bitcode" make
 
